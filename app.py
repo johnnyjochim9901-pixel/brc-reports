@@ -45,41 +45,6 @@ uploaded_file = st.file_uploader(
     help="Drag and drop or click to browse"
 )
 
-if uploaded_file is not None:
-    try:
-        # Read the CSV
-        df = pd.read_csv(uploaded_file)
-
-        st.success(f"✅ File loaded: {uploaded_file.name}")
-
-        with st.expander("Preview Data"):
-            st.dataframe(df.head(10))
-
-        # Generate button
-        if st.button("📊 Generate Report", type="primary", use_container_width=True):
-
-            if report_type == "BRC HOURS Report":
-                output = generate_brc_hours_report(df)
-                filename = "BRC_HOURS_REPORT.csv"
-            else:
-                output = generate_inspections_report(df)
-                filename = "INSPECTIONS_REPORT.csv"
-
-            st.success("✅ Report generated successfully!")
-
-            # Download button
-            st.download_button(
-                label="⬇️ Download Report",
-                data=output,
-                file_name=filename,
-                mime="text/csv",
-                use_container_width=True
-            )
-
-    except Exception as e:
-        st.error(f"❌ Error processing file: {str(e)}")
-
-
 def generate_brc_hours_report(df):
     """Generate BRC HOURS report"""
     output = io.StringIO()
@@ -260,3 +225,36 @@ def generate_inspections_report(df):
         output.write("=" * 50 + "\n\n")
 
     return output.getvalue()
+
+
+if uploaded_file is not None:
+    try:
+        # Read the CSV
+        df = pd.read_csv(uploaded_file)
+
+        st.success(f"✅ File loaded: {uploaded_file.name}")
+
+        with st.expander("Preview Data"):
+            st.dataframe(df.head(10))
+
+        # Generate button
+        if st.button("📊 Generate Report", type="primary", use_container_width=True):
+            if report_type == "BRC HOURS Report":
+                output = generate_brc_hours_report(df)
+                filename = "BRC_HOURS_REPORT.csv"
+            else:
+                output = generate_inspections_report(df)
+                filename = "INSPECTIONS_REPORT.csv"
+
+            st.success("✅ Report generated successfully!")
+
+            st.download_button(
+                label="⬇️ Download Report",
+                data=output,
+                file_name=filename,
+                mime="text/csv",
+                use_container_width=True
+            )
+
+    except Exception as e:
+        st.error(f"❌ Error processing file: {str(e)}")

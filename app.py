@@ -28,7 +28,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<div class="main-header">BRC Work Reports</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">Weekly Reports</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Generate professional reports from your CSV data</div>', unsafe_allow_html=True)
 
 # Report type selection

@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Page configuration
 st.set_page_config(
-    page_title="BRC Work Reports",
+    page_title="Weekly Reports",
     page_icon="📊",
     layout="wide"
 )

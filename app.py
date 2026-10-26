@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Page configuration
 st.set_page_config(
-    page_title="Weekly Reports",
+    page_title="BRC Work Reports",
     page_icon="📊",
     layout="wide"
 )
@@ -28,7 +28,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<div class="main-header">Weekly Reports</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">BRC Work Reports</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Generate professional reports from your CSV data</div>', unsafe_allow_html=True)
 
 # Report type selection
@@ -45,20 +45,58 @@ uploaded_file = st.file_uploader(
     help="Drag and drop or click to browse"
 )
 
+if uploaded_file is not None:
+    try:
+        # Read the CSV
+        df = pd.read_csv(uploaded_file)
+
+        st.success(f"✅ File loaded: {uploaded_file.name}")
+
+        with st.expander("Preview Data"):
+            st.dataframe(df.head(10))
+
+        # Generate button
+        if st.button("📊 Generate Report", type="primary", use_container_width=True):
+
+            if report_type == "BRC HOURS Report":
+                output = generate_brc_hours_report(df)
+                filename = "BRC_HOURS_REPORT.csv"
+            else:
+                output = generate_inspections_report(df)
+                filename = "INSPECTIONS_REPORT.csv"
+
+            st.success("✅ Report generated successfully!")
+
+            # Download button
+            st.download_button(
+                label="⬇️ Download Report",
+                data=output,
+                file_name=filename,
+                mime="text/csv",
+                use_container_width=True
+            )
+
+    except Exception as e:
+        st.error(f"❌ Error processing file: {str(e)}")
+
+
 def generate_brc_hours_report(df):
     """Generate BRC HOURS report"""
     output = io.StringIO()
 
-    # Group by Repair Date
-    df['Repair Date'] = pd.to_datetime(df['Repair Date'], errors='coerce')
-    df = df.dropna(subset=['Complete Date'])
-    df = df.sort_values('Repair Date')
+    # Handle column name variations
+    date_col = 'Repair Date' if 'Repair Date' in df.columns else 'Complete Date'
+
+    # Group by date
+    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+    df = df.dropna(subset=[date_col])
+    df = df.sort_values(date_col)
 
     # Process daily data
     daily_data = {}
 
     for _, row in df.iterrows():
-        repair_date = row['Repair Date'].strftime('%Y-%m-%d') if pd.notna(row['Repair Date']) else 'No Date'
+        repair_date = row[date_col].strftime('%Y-%m-%d') if pd.notna(row[date_col]) else 'No Date'
 
         if repair_date not in daily_data:
             daily_data[repair_date] = {
@@ -154,21 +192,29 @@ def generate_inspections_report(df):
     """Generate INSPECTIONS report"""
     output = io.StringIO()
 
+    # Handle column name variations
+    prodline_col = 'Product Line' if 'Product Line' in df.columns else 'ProdLine'
+    mark_col = 'Car Mark' if 'Car Mark' in df.columns else 'Mark'
+    number_col = 'Car Number' if 'Car Number' in df.columns else 'Number'
+    customer_col = 'Customer#' if 'Customer#' in df.columns else 'CusNumber'
+    contract_col = 'Contract#' if 'Contract#' in df.columns else 'CusContract'
+    total_col = 'Total Dollars' if 'Total Dollars' in df.columns else 'Total'
+
     # Parse dates and group by date
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df = df.dropna(subset=['Date'])
     df = df.sort_values('Date')
 
     # Replace blank ProdLine with LPG
-    df['ProdLine'] = df['ProdLine'].fillna('LPG')
-    df.loc[df['ProdLine'].str.strip() == '', 'ProdLine'] = 'LPG'
+    df[prodline_col] = df[prodline_col].fillna('LPG')
+    df.loc[df[prodline_col].astype(str).str.strip() == '', prodline_col] = 'LPG'
 
     # Group data
     daily_data = {}
 
     for _, row in df.iterrows():
         date = row['Date'].strftime('%Y-%m-%d')
-        prodline = row['ProdLine']
+        prodline = row[prodline_col]
 
         if date not in daily_data:
             daily_data[date] = {}
@@ -178,12 +224,12 @@ def generate_inspections_report(df):
 
         daily_data[date][prodline].append({
             'Location': row.get('Location', ''),
-            'Mark': row.get('Mark', ''),
-            'Number': row.get('Number', ''),
-            'CusNumber': row.get('CusNumber', ''),
-            'CusContract': row.get('CusContract', ''),
+            'Mark': row.get(mark_col, ''),
+            'Number': row.get(number_col, ''),
+            'CusNumber': row.get(customer_col, ''),
+            'CusContract': row.get(contract_col, ''),
             'Hours': float(row.get('Hours', 0) or 0),
-            'Total': float(row.get('Total', 0) or 0),
+            'Total': float(row.get(total_col, 0) or 0),
             'Currency': row.get('Currency', '')
         })
 
@@ -225,36 +271,3 @@ def generate_inspections_report(df):
         output.write("=" * 50 + "\n\n")
 
     return output.getvalue()
-
-
-if uploaded_file is not None:
-    try:
-        # Read the CSV
-        df = pd.read_csv(uploaded_file)
-
-        st.success(f"✅ File loaded: {uploaded_file.name}")
-
-        with st.expander("Preview Data"):
-            st.dataframe(df.head(10))
-
-        # Generate button
-        if st.button("📊 Generate Report", type="primary", use_container_width=True):
-            if report_type == "BRC HOURS Report":
-                output = generate_brc_hours_report(df)
-                filename = "BRC_HOURS_REPORT.csv"
-            else:
-                output = generate_inspections_report(df)
-                filename = "INSPECTIONS_REPORT.csv"
-
-            st.success("✅ Report generated successfully!")
-
-            st.download_button(
-                label="⬇️ Download Report",
-                data=output,
-                file_name=filename,
-                mime="text/csv",
-                use_container_width=True
-            )
-
-    except Exception as e:
-        st.error(f"❌ Error processing file: {str(e)}")

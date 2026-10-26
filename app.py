@@ -3,82 +3,6 @@ import pandas as pd
 import io
 from datetime import datetime
 
-# Page configuration
-st.set_page_config(
-    page_title="BRC Work Reports",
-    page_icon="📊",
-    layout="wide"
-)
-
-# Custom CSS for styling
-st.markdown("""
-    <style>
-    .main-header {
-        font-size: 3rem;
-        font-weight: 700;
-        color: #C8853F;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        font-size: 1.2rem;
-        color: #8A8A80;
-        margin-bottom: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# Header
-st.markdown('<div class="main-header">BRC Work Reports</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Generate professional reports from your CSV data</div>', unsafe_allow_html=True)
-
-# Report type selection
-report_type = st.radio(
-    "Select Report Type",
-    ["BRC HOURS Report", "INSPECTIONS Report"],
-    horizontal=True
-)
-
-# File upload
-uploaded_file = st.file_uploader(
-    "Upload your CSV file",
-    type=['csv'],
-    help="Drag and drop or click to browse"
-)
-
-if uploaded_file is not None:
-    try:
-        # Read the CSV
-        df = pd.read_csv(uploaded_file)
-
-        st.success(f"✅ File loaded: {uploaded_file.name}")
-
-        with st.expander("Preview Data"):
-            st.dataframe(df.head(10))
-
-        # Generate button
-        if st.button("📊 Generate Report", type="primary", use_container_width=True):
-
-            if report_type == "BRC HOURS Report":
-                output = generate_brc_hours_report(df)
-                filename = "BRC_HOURS_REPORT.csv"
-            else:
-                output = generate_inspections_report(df)
-                filename = "INSPECTIONS_REPORT.csv"
-
-            st.success("✅ Report generated successfully!")
-
-            # Download button
-            st.download_button(
-                label="⬇️ Download Report",
-                data=output,
-                file_name=filename,
-                mime="text/csv",
-                use_container_width=True
-            )
-
-    except Exception as e:
-        st.error(f"❌ Error processing file: {str(e)}")
-
 
 def generate_brc_hours_report(df):
     """Generate BRC HOURS report"""
@@ -271,3 +195,80 @@ def generate_inspections_report(df):
         output.write("=" * 50 + "\n\n")
 
     return output.getvalue()
+
+
+# Page configuration
+st.set_page_config(
+    page_title="BRC Work Reports",
+    page_icon="📊",
+    layout="wide"
+)
+
+# Custom CSS for styling
+st.markdown("""
+    <style>
+    .main-header {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #C8853F;
+        margin-bottom: 1rem;
+    }
+    .sub-header {
+        font-size: 1.2rem;
+        color: #8A8A80;
+        margin-bottom: 2rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Header
+st.markdown('<div class="main-header">BRC Work Reports</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Generate professional reports from your CSV data</div>', unsafe_allow_html=True)
+
+# Report type selection
+report_type = st.radio(
+    "Select Report Type",
+    ["BRC HOURS Report", "INSPECTIONS Report"],
+    horizontal=True
+)
+
+# File upload
+uploaded_file = st.file_uploader(
+    "Upload your CSV file",
+    type=['csv'],
+    help="Drag and drop or click to browse"
+)
+
+if uploaded_file is not None:
+    try:
+        # Read the CSV
+        df = pd.read_csv(uploaded_file)
+
+        st.success(f"✅ File loaded: {uploaded_file.name}")
+
+        with st.expander("Preview Data"):
+            st.dataframe(df.head(10))
+
+        # Generate button
+        if st.button("📊 Generate Report", type="primary", use_container_width=True):
+
+            if report_type == "BRC HOURS Report":
+                output = generate_brc_hours_report(df)
+                filename = "BRC_HOURS_REPORT.csv"
+            else:
+                output = generate_inspections_report(df)
+                filename = "INSPECTIONS_REPORT.csv"
+
+            st.success("✅ Report generated successfully!")
+
+            # Download button
+            st.download_button(
+                label="⬇️ Download Report",
+                data=output,
+                file_name=filename,
+                mime="text/csv",
+                use_container_width=True
+            )
+
+    except Exception as e:
+        st.error(f"❌ Error processing file: {str(e)}")
